@@ -12,12 +12,8 @@ data = {
 }
 df = pd.DataFrame(data)
 
-# Initialize session state for click data
-if "click_data" not in st.session_state:
-    st.session_state["click_data"] = None
-
 # Streamlit App
-st.title("Interactive Line, Bar, and Clickable Pie Chart")
+st.title("Interactive Line, Bar, and Hover Pie Chart")
 
 # Sidebar for Bar Chart Selection
 st.sidebar.header("Controls")
@@ -35,7 +31,7 @@ fig.add_trace(go.Scatter(
     line=dict(color="blue"),
     marker=dict(size=10),
     customdata=df[["v1", "v2", "v3"]].values,  # Pass additional data for pie chart
-    hovertemplate="Date: %{x}<br>Y: %{y}<br>v1: %{customdata[0]}<br>v2: %{customdata[1]}<br>v3: %{customdata[2]}"
+    hovertemplate="Date: %{x}<br>Y: %{y}<br>v1: %{customdata[0]}<br>v2: %{customdata[1]}<br>v3: %{customdata[2]}",
 ))
 
 # Add Bar Chart for Selected Variable
@@ -49,32 +45,33 @@ fig.add_trace(go.Bar(
 
 # Update Layout
 fig.update_layout(
-    title="Line and Bar Chart with Clickable Pie Chart",
+    title="Line and Bar Chart with Hover Pie Chart",
     xaxis_title="Date",
     yaxis_title="Values",
-    barmode="overlay",  # Bar graph overlay
+    barmode="overlay",
     legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
 )
 
 # Render Plotly Figure in Streamlit
-click_event = st.plotly_chart(fig, use_container_width=True)
+hover_data = st.plotly_chart(fig, use_container_width=True)
 
-# Capture Click Event
-if click_event is not None:
-    st.session_state["click_data"] = click_event["points"][0]
+# Display Pie Chart on Hover
+st.subheader("Pie Chart for Hovered Point")
+if hover_data is not None:
+    # Extract hover data
+    points = hover_data.get("hoverData", {}).get("points", [])
+    if points:
+        # Get the hovered point's custom data (v1, v2, v3)
+        customdata = points[0].get("customdata", [])
+        if customdata:
+            values = customdata
+            labels = ["v1", "v2", "v3"]
 
-# Process Click Event for Pie Chart
-st.subheader("Pie Chart for Selected Point")
-if st.session_state["click_data"]:
-    click_data = st.session_state["click_data"]
-    customdata = click_data.get("customdata", [])
-    if customdata:
-        values = customdata
-        labels = ["v1", "v2", "v3"]
-
-        # Create Pie Chart
-        pie_fig = go.Figure(data=[go.Pie(labels=labels, values=values, textinfo="label+percent")])
-        pie_fig.update_layout(title=f"Distribution of v1, v2, v3 on {click_data['x']}")
-        st.plotly_chart(pie_fig, use_container_width=True)
+            # Create Pie Chart
+            pie_fig = go.Figure(data=[go.Pie(labels=labels, values=values, textinfo="label+percent")])
+            pie_fig.update_layout(title=f"Distribution of v1, v2, v3")
+            st.plotly_chart(pie_fig, use_container_width=True)
+        else:
+            st.write("Hover over a point on the Y line to see the pie chart.")
 else:
-    st.write("Click on a point on the Y line chart to display its corresponding pie chart.")
+    st.write("Hover over a point on the Y line to display its corresponding pie chart.")
