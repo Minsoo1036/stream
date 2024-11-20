@@ -12,6 +12,10 @@ data = {
 }
 df = pd.DataFrame(data)
 
+# Initialize session state for click data
+if "click_data" not in st.session_state:
+    st.session_state["click_data"] = None
+
 # Streamlit App
 st.title("Interactive Line, Bar, and Clickable Pie Chart")
 
@@ -52,24 +56,25 @@ fig.update_layout(
     legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
 )
 
-# Render Plotly Figure in Streamlit and Capture Clicks
-selected_point = st.plotly_chart(fig, use_container_width=True, click_data=True)
+# Render Plotly Figure in Streamlit
+click_event = st.plotly_chart(fig, use_container_width=True)
+
+# Capture Click Event
+if click_event is not None:
+    st.session_state["click_data"] = click_event["points"][0]
 
 # Process Click Event for Pie Chart
 st.subheader("Pie Chart for Selected Point")
-if selected_point is not None:
-    click_data = selected_point.get("points", [])[0]  # Retrieve the clicked point data
-    if click_data:
-        customdata = click_data.get("customdata", [])
-        if customdata:
-            values = customdata
-            labels = ["v1", "v2", "v3"]
+if st.session_state["click_data"]:
+    click_data = st.session_state["click_data"]
+    customdata = click_data.get("customdata", [])
+    if customdata:
+        values = customdata
+        labels = ["v1", "v2", "v3"]
 
-            # Create Pie Chart
-            pie_fig = go.Figure(data=[go.Pie(labels=labels, values=values, textinfo="label+percent")])
-            pie_fig.update_layout(title=f"Distribution of v1, v2, v3 on {click_data['x']}")
-            st.plotly_chart(pie_fig, use_container_width=True)
-        else:
-            st.write("Click on a valid data point to see the pie chart.")
+        # Create Pie Chart
+        pie_fig = go.Figure(data=[go.Pie(labels=labels, values=values, textinfo="label+percent")])
+        pie_fig.update_layout(title=f"Distribution of v1, v2, v3 on {click_data['x']}")
+        st.plotly_chart(pie_fig, use_container_width=True)
 else:
     st.write("Click on a point on the Y line chart to display its corresponding pie chart.")
