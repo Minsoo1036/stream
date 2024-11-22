@@ -1,7 +1,7 @@
 import pandas as pd
 from glob import glob
 
-path = './price_simulator_cmamba'
+path = './price_simulator_cmamba/'
 
 simul_data = {
     f"simul_v{i}_{j}": pd.read_csv(path + f'simul_v{i}_{j}.csv').iloc[:, 1:]
